@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 void main() {
   runApp(MyApp());
@@ -33,7 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterTts _flutterTts = FlutterTts();
   final ImagePicker _picker = ImagePicker();
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  final TextEditingController _textController = TextEditingController();
   bool _isRecording = false;
+  bool _isListening = false;
+  String _transcription = "";
+  String _imageBase64 = "";
 
   @override
   void initState() {
@@ -45,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _recorder.closeAudioSession();
+    _textController.dispose();
     super.dispose();
   }
 
@@ -53,31 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _generateAndSpeakWelcomeMessage() async {
-    String welcomeMessage = await _generateWelcomeMessage();
+    String welcomeMessage = "Hi,";
     await _speakMessage(welcomeMessage);
-  }
-
-  Future<String> _generateWelcomeMessage() async {
-    String prompt = "Please generate a welcome message for a blind person. The message should say: 'Hi, I am your AI assistant. The app has two big buttons: one from the middle to the upper side of the screen for starting the camera, and one from the middle to the lower side for starting voice recording.'";
-
-    final response = await http.post(
-      Uri.parse('https://api.openai.com/v1/engines/davinci-codex/completions'),
-      headers: {
-        'Authorization': 'Bearer sk-proj-ti6a9826lYKHlD3kFKKYT3BlbkFJirlQcvxrrab6HjSWW7Le',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'prompt': prompt,
-        'max_tokens': 150,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      return jsonResponse['choices'][0]['text'];
-    } else {
-      throw Exception('Failed to generate welcome message');
-    }
+    await _testChatGPTConnection(); // Test ChatGPT connection
   }
 
   Future<void> _speakMessage(String message) async {
@@ -86,55 +71,139 @@ class _HomeScreenState extends State<HomeScreen> {
     await _flutterTts.speak(message);
   }
 
-  Future<String> sendToChatGPT(String text) async {
-    final response = await http.post(
-      Uri.parse('https://api.openai.com/v1/engines/davinci-codex/completions'),
-      headers: {
-        'Authorization': 'Bearer sk-proj-ti6a9826lYKHlD3kFKKYT3BlbkFJirlQcvxrrab6HjSWW7Le',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'prompt': text,
-        'max_tokens': 150,
-      }),
-    );
+  Future<void> _testChatGPTConnection() async {
+    try {
+      final response = await sendToChatGPT("Hi, my friend");
+      await _speakMessage("ChatGPT response: $response");
+    } catch (e) {
+      print('Error: $e');
+      await _speakMessage("Failed to communicate with ChatGPT.");
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      return jsonResponse['choices'][0]['text'];
-    } else {
+  Future<void> _startListening() async {
+    bool available = await _speech.initialize(
+      onStatus: (val) => print('onStatus: $val'),
+      onError: (val) => print('onError: $val'),
+    );
+    if (available) {
+      setState(() => _isListening = true);
+      await _speakMessage("Recording started");
+      _speech.listen(
+        onResult: (val) => setState(() {
+          _transcription = val.recognizedWords;
+          if (val.hasConfidenceRating && val.confidence > 0) {
+            _isListening = false;
+            _speech.stop();
+            _sendVoiceToChatGPT();
+          }
+        }),
+      );
+    }
+  }
+
+  Future<void> _stopListening() async {
+    _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  Future<void> _sendVoiceToChatGPT() async {
+    String prompt = "User voice input.";
+    try {
+      final response = await sendToChatGPT(prompt, audio: _transcription);
+      await _speakMessage(response);
+    } catch (e) {
+      print('Error: $e');
+      await _speakMessage("Failed to communicate with ChatGPT.");
+    }
+  }
+
+  Future<void> _sendTextToChatGPT() async {
+    String prompt = _textController.text;
+    try {
+      final response = await sendToChatGPT(prompt);
+      await _speakMessage(response);
+    } catch (e) {
+      print('Error: $e');
+      await _speakMessage("Failed to communicate with ChatGPT.");
+    }
+  }
+
+  Future<String> sendToChatGPT(String prompt, {String? audio}) async {
+    Map<String, dynamic> requestBody = {
+      'model': 'gpt-4o',
+      'messages': [
+        {'role': 'user', 'content': prompt}
+      ],
+      'max_tokens': 150,
+    };
+
+    if (audio != null) {
+      requestBody['audio'] = audio;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
+        headers: {
+          'Authorization': 'Bearer sk-proj-HK7qSrfdod8XRiAmQHa6T3BlbkFJ90N58Y1QCu0flYstFDCM',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return jsonResponse['choices'][0]['message']['content'] ?? "No response from ChatGPT";
+      } else {
+        print('Failed to communicate with ChatGPT: ${response.statusCode} ${response.body}');
+        throw Exception('Failed to communicate with ChatGPT');
+      }
+    } catch (e) {
+      print('Error: $e');
       throw Exception('Failed to communicate with ChatGPT');
     }
   }
 
-  Future<String> speechToText(File audioFile) async {
-    // This function should send the audio file to a speech-to-text API and return the transcribed text.
-    // Replace with actual implementation.
-    return "This is a transcribed text.";
+  Future<void> processImage(XFile image) async {
+    final bytes = await image.readAsBytes();
+    _imageBase64 = base64Encode(bytes);
+
+    try {
+      final response = await sendImageToGPT4o(_imageBase64);
+      await _speakMessage(response);
+    } catch (e) {
+      print('Error processing image: $e');
+      await _speakMessage("Failed to communicate with ChatGPT.");
+    }
   }
 
-  Future<void> recordAndProcessVoice() async {
-    if (!_isRecording) {
-      Directory tempDir = await getTemporaryDirectory();
-      String tempPath = '${tempDir.path}/audio.aac';
-      await _recorder.startRecorder(
-        toFile: tempPath,
-      );
-      setState(() {
-        _isRecording = true;
-      });
-    } else {
-      String? path = await _recorder.stopRecorder();
-      if (path != null) {
-        setState(() {
-          _isRecording = false;
-        });
+  Future<String> sendImageToGPT4o(String base64Image) async {
+    var requestBody = {
+      'image': base64Image,
+      'model': 'gpt-4o', // Use the correct model for vision tasks
+    };
 
-        File audioFile = File(path);
-        String transcribedText = await speechToText(audioFile);
-        String chatGPTResponse = await sendToChatGPT(transcribedText);
-        await _speakMessage(chatGPTResponse);
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/images/edits'), // Use the correct endpoint for image processing
+        headers: {
+          'Authorization': 'Bearer sk-proj-HK7qSrfdod8XRiAmQHa6T3BlbkFJ90N58Y1QCu0flYstFDCM',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return jsonResponse['data'][0]['text'] ?? "No response from ChatGPT";
+      } else {
+        print('Failed to communicate with ChatGPT: ${response.statusCode} ${response.body}');
+        throw Exception('Failed to communicate with ChatGPT');
       }
+    } catch (e) {
+      print('Error: $e');
+      throw Exception('Failed to communicate with ChatGPT');
     }
   }
 
@@ -149,12 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
         children: <Widget>[
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 300), // Make the button big
+              minimumSize: Size(double.infinity, 200), // Make the button big
             ),
             onPressed: () async {
+              await _speakMessage("Camera started");
               XFile? image = await _picker.pickImage(source: ImageSource.camera);
               if (image != null) {
-                // Process the image as needed
+                await processImage(image);
               }
             },
             child: Text('Start Camera'),
@@ -162,12 +232,30 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 20), // Add some space between buttons
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity,300), // Make the button big
+              minimumSize: Size(double.infinity, 200), // Make the button big
             ),
             onPressed: () async {
-              await recordAndProcessVoice();
+              if (!_isListening) {
+                await _startListening();
+              } else {
+                await _stopListening();
+              }
             },
-            child: Text(_isRecording ? 'Stop Recording' : 'Record Voice'),
+            child: Text(_isListening ? 'Stop Listening' : 'Record Voice'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Enter text',
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _sendTextToChatGPT,
+            child: Text('Send Text'),
           ),
         ],
       ),
