@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _generateAndSpeakWelcomeMessage() async {
-    String welcomeMessage = "Hi, I am your AI assistant. There are two big buttons on your screen: the upper one for starting the camera and the lower one for recording your voice.";
+    String welcomeMessage = "Starting";
     await _speakMessage(welcomeMessage);
     await _testChatGPTConnection(); // Test ChatGPT connection
   }
@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: <Widget>[
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 300), // Make the button big
+              minimumSize: Size(double.infinity, 200), // Make the button big
             ),
             onPressed: () async {
               await _speakMessage("Camera started");
@@ -249,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 20), // Add some space between buttons
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 300), // Make the button big
+              minimumSize: Size(double.infinity, 200), // Make the button big
             ),
             onPressed: () async {
               if (!_isListening) {
