@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _generateAndSpeakWelcomeMessage() async {
-    String welcomeMessage = "Hi,";
+    String welcomeMessage = "Hi, I am your AI assistant. There are two big buttons on your screen: the upper one for starting the camera and the lower one for recording your voice.";
     await _speakMessage(welcomeMessage);
     await _testChatGPTConnection(); // Test ChatGPT connection
   }
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _testChatGPTConnection() async {
     try {
-      final response = await sendToChatGPT("Hi, my friend");
+      final response = await sendToChatGPT("Hi, how are you?");
       await _speakMessage("ChatGPT response: $response");
     } catch (e) {
       print('Error: $e');
@@ -180,13 +180,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String> sendImageToGPT4o(String base64Image) async {
     var requestBody = {
-      'image': base64Image,
-      'model': 'gpt-4o', // Use the correct model for vision tasks
+      'model': 'gpt-4o',
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'text',
+              'text': 'What’s in this image?'
+            },
+            {
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:image/jpeg;base64,$base64Image'
+              }
+            }
+          ]
+        }
+      ],
+      'max_tokens': 300
     };
 
     try {
       final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/images/edits'), // Use the correct endpoint for image processing
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Authorization': 'Bearer sk-proj-HK7qSrfdod8XRiAmQHa6T3BlbkFJ90N58Y1QCu0flYstFDCM',
           'Content-Type': 'application/json',
@@ -196,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return jsonResponse['data'][0]['text'] ?? "No response from ChatGPT";
+        return jsonResponse['choices'][0]['message']['content'] ?? "No response from ChatGPT";
       } else {
         print('Failed to communicate with ChatGPT: ${response.statusCode} ${response.body}');
         throw Exception('Failed to communicate with ChatGPT');
@@ -218,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: <Widget>[
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 200), // Make the button big
+              minimumSize: Size(double.infinity, 300), // Make the button big
             ),
             onPressed: () async {
               await _speakMessage("Camera started");
@@ -232,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 20), // Add some space between buttons
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 200), // Make the button big
+              minimumSize: Size(double.infinity, 300), // Make the button big
             ),
             onPressed: () async {
               if (!_isListening) {
