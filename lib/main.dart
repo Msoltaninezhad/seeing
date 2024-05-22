@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _testChatGPTConnection() async {
     try {
-      final response = await sendToChatGPT("Hi, my friend, greet me");
+      final response = await sendToChatGPT("Just Say:( Hi Im here to be your eye)");
       await _speakMessage("ChatGPT response: $response");
     } catch (e) {
       print('Error: $e');
