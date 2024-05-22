@@ -18,6 +18,7 @@ dependencies:
   http: ^0.13.4
   path_provider: ^2.0.11
   speech_to_text: ^6.5.1
+
   #googleapis: ^11.0.0 # Ensure this version or a compatible one
  # googleapis_auth: ^1.1.0
 
