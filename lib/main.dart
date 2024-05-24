@@ -36,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final ImagePicker _picker = ImagePicker();
   final stt.SpeechToText _speech = stt.SpeechToText();
   final TextEditingController _textController = TextEditingController();
-  final TextEditingController _questionController = TextEditingController();
   bool _isRecording = false;
   bool _isListening = false;
   String _transcription = "";
@@ -55,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _recorder.closeAudioSession();
     _textController.dispose();
-    _questionController.dispose();
     super.dispose();
   }
 
@@ -64,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _generateAndSpeakWelcomeMessage() async {
-    String welcomeMessage = "Starting";
+    String welcomeMessage = "Starting.";
     await _speakMessage(welcomeMessage);
     await _testChatGPTConnection();
   }
@@ -77,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _testChatGPTConnection() async {
     try {
-      final response = await sendToChatGPT("Just Say:( Hi Im here to be your eye)");
+      final response = await sendToChatGPT("Just Say:( Hi I'm here to be your eye)");
       await _speakMessage("$response");
     } catch (e) {
       print('Error: $e');
@@ -103,6 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }),
       );
+    } else {
+      await _speakMessage("Speech recognition not available");
     }
   }
 
@@ -112,23 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _sendVoiceToChatGPT() async {
-    String prompt = "User voice input: $_transcription";
+    String prompt = "User voice input: $_transcription. Note: The user is blind.";
     if (_lastImageDescription.isNotEmpty) {
-      prompt = "User question about the image: $_transcription\nImage description: $_lastImageDescription";
-    }
-    try {
-      final response = await sendToChatGPT(prompt);
-      await _speakMessage(response);
-    } catch (e) {
-      print('Error: $e');
-      await _speakMessage("Failed to communicate with ChatGPT.");
-    }
-  }
-
-  Future<void> _sendTextToChatGPT() async {
-    String prompt = _textController.text;
-    if (_lastImageDescription.isNotEmpty) {
-      prompt = "User question about the image: $prompt\nImage description: $_lastImageDescription";
+      prompt = "User question about the image: $_transcription\nImage description: _lastImageDescription. Note: The user is blind.";
     }
     try {
       final response = await sendToChatGPT(prompt);
@@ -196,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'content': [
             {
               'type': 'text',
-              'text': 'What’s in this image?'
+              'text': 'What’s in this image? Note: The user is blind.'
             },
             {
               'type': 'image_url',
@@ -230,24 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print('Error: $e');
       throw Exception('Failed to communicate with ChatGPT');
-    }
-  }
-
-  Future<void> _sendQuestionToChatGPT() async {
-    if (_lastImageDescription.isEmpty) {
-      await _speakMessage("No image has been described yet.");
-      return;
-    }
-
-    String prompt = _questionController.text;
-    prompt = "User question about the image: $prompt\nImage description: $_lastImageDescription";
-
-    try {
-      final response = await sendToChatGPT(prompt);
-      await _speakMessage(response);
-    } catch (e) {
-      print('Error: $e');
-      await _speakMessage("Failed to communicate with ChatGPT.");
     }
   }
 
@@ -295,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hear The Vision'),
+        title: Text('HearVision'),
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app),
@@ -333,17 +301,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: Text(_isListening ? 'Stop Listening' : 'Record Voice'),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _questionController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Ask about the image',
-              ),
-            ),
-          ),
-
         ],
       ),
     );
