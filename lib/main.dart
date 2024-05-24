@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testChatGPTConnection() async {
     try {
       final response = await sendToChatGPT("Just Say:( Hi Im here to be your eye)");
-      await _speakMessage("ChatGPT response: $response");
+      await _speakMessage("$response");
     } catch (e) {
       print('Error: $e');
       await _speakMessage("Failed to communicate with ChatGPT.");
@@ -333,10 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: Text(_isListening ? 'Stop Listening' : 'Record Voice'),
           ),
-          ElevatedButton(
-            onPressed: _sendTextToChatGPT,
-            child: Text('Send Text'),
-          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -347,10 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: _sendQuestionToChatGPT,
-            child: Text('Ask Question'),
-          ),
+
         ],
       ),
     );
