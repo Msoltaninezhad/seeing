@@ -3,10 +3,14 @@ import 'package:visually_impaired_app/ai/text_recognition.dart';
 import 'package:visually_impaired_app/splash/splash_screen.dart';
 import 'package:visually_impaired_app/core/home_screen.dart';
 import 'package:visually_impaired_app/ai/conversational_ai_chatgpt_integration.dart';
+import 'package:visually_impaired_app/splash/wellcome_message.dart';
+
+
 
 class VisuallyImpairedApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    WelcomeMessage(); // Call the WelcomeMessage function
     return MaterialApp(
       title: 'Visually Impaired Assistant',
       initialRoute: '/',
@@ -24,3 +28,6 @@ class VisuallyImpairedApp extends StatelessWidget {
   }
 }
 
+void main() {
+  runApp(VisuallyImpairedApp());
+}
