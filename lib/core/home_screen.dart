@@ -1,12 +1,16 @@
+// Import necessary Flutter material package for UI components
 import 'package:flutter/material.dart';
+// Import the camera package for camera functionalities
 import 'package:camera/camera.dart';
+// Import the dart:convert package for encoding and decoding data
 import 'dart:convert';
+// Import custom packages for AI functionalities and permissions handling
 import 'package:visually_impaired_app/ai/object_detection.dart';
 import 'package:visually_impaired_app/ai/chatgpt_service.dart';
 import 'package:visually_impaired_app/ai/tts_and_stt.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
+// Functions to print colored messages in the console
 void printRed(String message) {
   print('\x1B[31m$message\x1B[0m');
 }
@@ -23,41 +27,45 @@ void printBlue(String message) {
   print('\x1B[34m$message\x1B[0m');
 }
 
+// Define HomeScreen as a stateful widget
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+// Define the state for HomeScreen
 class _HomeScreenState extends State<HomeScreen> {
-  CameraController? _cameraController;
-  ObjectDetection? _objectDetection;
-  ChatGPTService _chatGPTService = ChatGPTService();
-  VoiceInteraction _voiceInteraction = VoiceInteraction();
-  String _detectedObjects = '';
-  String _generatedDescription = '';
-  bool _isLoading = false;
-  String _speechText = '';
+  CameraController? _cameraController; // Controller for the camera
+  ObjectDetection? _objectDetection; // Instance for object detection
+  ChatGPTService _chatGPTService = ChatGPTService(); // Instance for ChatGPT service
+  VoiceInteraction _voiceInteraction = VoiceInteraction(); // Instance for voice interaction
+  String _detectedObjects = ''; // Stores detected objects
+  String _generatedDescription = ''; // Stores generated description from ChatGPT
+  bool _isLoading = false; // Loading state indicator
+  String _speechText = ''; // Stores the recognized speech text
 
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
+    _requestPermissions(); // Request necessary permissions on initialization
   }
 
+  // Request camera and microphone permissions
   Future<void> _requestPermissions() async {
     printGreen('Requesting camera and microphone permissions');
     var cameraStatus = await Permission.camera.request();
     var microphoneStatus = await Permission.microphone.request();
     if (cameraStatus.isGranted && microphoneStatus.isGranted) {
       printGreen('Camera and microphone permissions granted');
-      await _initializeCamera();
-      _initializeObjectDetection();
-      _startListening();
+      await _initializeCamera(); // Initialize camera if permissions are granted
+      _initializeObjectDetection(); // Initialize object detection
+      _startListening(); // Start listening for voice input
     } else {
       printRed('Camera or microphone permission denied');
     }
   }
 
+  // Initialize the camera
   Future<void> _initializeCamera() async {
     printGreen('Initializing camera');
     final cameras = await availableCameras();
@@ -67,12 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
     printGreen('Camera initialized');
   }
 
+  // Initialize object detection
   Future<void> _initializeObjectDetection() async {
     printGreen('Initializing object detection');
     _objectDetection = await ObjectDetection.create();
     printGreen('Object detection initialized');
   }
 
+  // Start listening for voice input
   void _startListening() {
     printGreen('Starting to listen');
     _voiceInteraction.startListening((speechText) async {
@@ -119,9 +129,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     printRed('Disposing resources');
-    _cameraController?.dispose();
-    _objectDetection?.close();
-    _voiceInteraction.dispose();
+    _cameraController?.dispose(); // Dispose camera controller
+    _objectDetection?.close(); // Close object detection
+    _voiceInteraction.dispose(); // Dispose voice interaction
     super.dispose();
   }
 
