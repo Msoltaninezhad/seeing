@@ -1,6 +1,8 @@
+// Import the necessary packages for text-to-speech and speech-to-text functionalities
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+// Functions to print colored messages in the console for debugging purposes
 void printRed(String message) {
   print('\x1B[31m$message\x1B[0m');
 }
@@ -17,100 +19,103 @@ void printBlue(String message) {
   print('\x1B[34m$message\x1B[0m');
 }
 
+// VoiceInteraction class handles the text-to-speech and speech-to-text interactions
 class VoiceInteraction {
-  final FlutterTts _flutterTts = FlutterTts();
-  final stt.SpeechToText _speechToText = stt.SpeechToText();
-  bool _isListening = false;
+  final FlutterTts _flutterTts = FlutterTts(); // Instance of FlutterTts for text-to-speech
+  final stt.SpeechToText _speechToText = stt.SpeechToText(); // Instance of SpeechToText for speech-to-text
+  bool _isListening = false; // Indicates if the system is currently listening
+  bool _isProcessing = false; // Indicates if a command is being processed
 
+  // Constructor to initialize TTS settings
   VoiceInteraction() {
     _initializeTts();
   }
 
+  // Initialize the TTS settings
   Future<void> _initializeTts() async {
-    printGreen('Initializing TTS');
-    await _flutterTts.setLanguage("en-US");
-    await _flutterTts.setSpeechRate(0.5);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
-    printGreen('TTS Initialized');
+    await _flutterTts.setLanguage("en-US"); // Set language to English (US)
+    await _flutterTts.setSpeechRate(0.5); // Set speech rate
+    await _flutterTts.setVolume(1.0); // Set volume
+    await _flutterTts.setPitch(1.0); // Set pitch
   }
 
+  // Function to speak the provided text using TTS
   Future<void> speakText(String text) async {
-    printBlue('Speaking text: $text');
     await _flutterTts.speak(text);
   }
 
-  Future<void> startListening(Function(String) onResult) async {
+  // Function to start listening for voice commands
+  Future<void> startListening(Function(String) onDescribeCommand) async {
     if (_isListening) {
-      printRed('Already listening, stopping current instance');
-      await _speechToText.stop();
+      await _speechToText.stop(); // Stop listening if already listening
       _isListening = false;
     }
 
-    printGreen('Initializing Speech to Text');
+    // Initialize the speech-to-text functionality
     bool available = await _speechToText.initialize(
       onStatus: (status) {
-        printYellow('onStatus: $status');
         if (status == 'done' || status == 'notListening') {
           _isListening = false;
-          printYellow('Status: $status, Restarting listening');
-          startListening(onResult); // Restart listening
+          if (!_isProcessing) {
+            startListening(onDescribeCommand); // Restart listening if not processing
+          }
         }
       },
       onError: (error) {
-        printRed('onError: $error');
         if (error.errorMsg == 'error_busy') {
-          printRed('Speech recognition service is busy. Retrying...');
           Future.delayed(Duration(seconds: 1), () {
-            startListening(onResult);
+            if (!_isProcessing) {
+              startListening(onDescribeCommand); // Retry listening if an error occurs
+            }
           });
         } else {
           _isListening = false;
-          startListening(onResult); // Restart listening on error
+          if (!_isProcessing) {
+            startListening(onDescribeCommand); // Restart listening if not processing
+          }
         }
       },
     );
 
     if (available) {
-      printGreen('Speech recognition available, starting to listen');
       _isListening = true;
-      _listen(onResult);
-    } else {
-      printRed('Speech recognition not available');
+      _listen(onDescribeCommand); // Start listening if initialization is successful
     }
   }
 
-  void _listen(Function(String) onResult) {
-    printYellow('Listening...');
+  // Function to handle the actual listening process
+  void _listen(Function(String) onDescribeCommand) {
     _speechToText.listen(
       onResult: (val) {
-        printBlue('Recognized words: ${val.recognizedWords}');
-        onResult(val.recognizedWords);
         if (val.finalResult) {
-          printYellow('Final result received');
-          _isListening = false;
+          String command = val.recognizedWords.toLowerCase();
+          if (command == "describe" && !_isProcessing) {
+            _isProcessing = true;
+            _isListening = false;
+            onDescribeCommand(command); // Call the provided command callback
+          }
         }
       },
-      listenFor: Duration(seconds: 30), // Adjust duration as needed
-      pauseFor: Duration(seconds: 5), // Adjust pause duration as needed
-      partialResults: true,
-      localeId: 'en_US',
-      onSoundLevelChange: (level) => printYellow('Sound level: $level'),
-      cancelOnError: true,
+      listenFor: Duration(seconds: 30), // Maximum listening duration
+      pauseFor: Duration(seconds: 5), // Pause duration between listens
+      partialResults: true, // Allow partial results
+      localeId: 'en_US', // Locale for speech recognition
+      onSoundLevelChange: (level) {}, // Sound level change callback (not used)
+      cancelOnError: true, // Cancel on error
     );
   }
 
+  // Function to stop listening
   void stopListening() async {
     if (_isListening) {
-      printRed('Stopping listening');
       await _speechToText.stop();
       _isListening = false;
     }
   }
 
+  // Function to dispose resources
   void dispose() {
-    printRed('Disposing TTS and Speech to Text');
-    _flutterTts.stop();
-    stopListening();
+    _flutterTts.stop(); // Stop TTS
+    stopListening(); // Stop listening
   }
 }
