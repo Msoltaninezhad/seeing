@@ -99,9 +99,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleLongPressStart() {
-    _longPressTimer = Timer(Duration(seconds: 5), () {
+    _longPressTimer = Timer(Duration(seconds: 2), () async {
       if (!_isAskingQuestion) {
-        // Start listening for a question after 5 seconds
+        await _voiceInteraction.speakText("Ask question");
+        _voiceInteraction.startListening((command) {
+          // Handle the command here
+          print("User asked: $command");
+          // You can add additional functionality to process the command
+        });
       }
     });
   }
