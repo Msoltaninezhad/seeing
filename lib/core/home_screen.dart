@@ -1,137 +1,123 @@
-// Import necessary Flutter material package for UI components
 import 'package:flutter/material.dart';
-// Import the camera package for camera functionalities
 import 'package:camera/camera.dart';
-// Import the dart:convert package for encoding and decoding data
+import 'dart:async';
 import 'dart:convert';
-// Import custom packages for AI functionalities and permissions handling
 import 'package:visually_impaired_app/ai/object_detection.dart';
 import 'package:visually_impaired_app/ai/chatgpt_service.dart';
 import 'package:visually_impaired_app/ai/tts_and_stt.dart';
-import 'package:permission_handler/permission_handler.dart';
 
-// Functions to print colored messages in the console
-void printRed(String message) {
-  print('\x1B[31m$message\x1B[0m');
-}
-
-void printGreen(String message) {
-  print('\x1B[32m$message\x1B[0m');
-}
-
-void printYellow(String message) {
-  print('\x1B[33m$message\x1B[0m');
-}
-
-void printBlue(String message) {
-  print('\x1B[34m$message\x1B[0m');
-}
-
-// Define HomeScreen as a stateful widget
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-// Define the state for HomeScreen
 class _HomeScreenState extends State<HomeScreen> {
-  CameraController? _cameraController; // Controller for the camera
-  ObjectDetection? _objectDetection; // Instance for object detection
-  ChatGPTService _chatGPTService = ChatGPTService(); // Instance for ChatGPT service
-  VoiceInteraction _voiceInteraction = VoiceInteraction(); // Instance for voice interaction
-  String _detectedObjects = ''; // Stores detected objects
-  String _generatedDescription = ''; // Stores generated description from ChatGPT
-  bool _isLoading = false; // Loading state indicator
-  String _speechText = ''; // Stores the recognized speech text
+  CameraController? _cameraController;
+  ObjectDetection? _objectDetection;
+  ChatGPTService _chatGPTService = ChatGPTService();
+  VoiceInteraction _voiceInteraction = VoiceInteraction();
+  String _detectedObjects = '';
+  String _generatedDescription = '';
+  bool _isLoading = false;
+  String _speechText = '';
+  Timer? _longPressTimer;
+  bool _isAskingQuestion = false;
+  bool _isDescribing = false; // New state variable to track if describing
 
   @override
   void initState() {
     super.initState();
-    _requestPermissions(); // Request necessary permissions on initialization
+    _initializeCamera();
+    _initializeObjectDetection();
   }
 
-  // Request camera and microphone permissions
-  Future<void> _requestPermissions() async {
-    printGreen('Requesting camera and microphone permissions');
-    var cameraStatus = await Permission.camera.request();
-    var microphoneStatus = await Permission.microphone.request();
-    if (cameraStatus.isGranted && microphoneStatus.isGranted) {
-      printGreen('Camera and microphone permissions granted');
-      await _initializeCamera(); // Initialize camera if permissions are granted
-      _initializeObjectDetection(); // Initialize object detection
-      _startListening(); // Start listening for voice input
-    } else {
-      printRed('Camera or microphone permission denied');
-    }
+  Future<void> _initializeObjectDetection() async {
+    _objectDetection = await ObjectDetection.create();
   }
 
-  // Initialize the camera
   Future<void> _initializeCamera() async {
-    printGreen('Initializing camera');
     final cameras = await availableCameras();
     _cameraController = CameraController(cameras[0], ResolutionPreset.high);
     await _cameraController?.initialize();
     setState(() {});
-    printGreen('Camera initialized');
   }
 
-  // Initialize object detection
-  Future<void> _initializeObjectDetection() async {
-    printGreen('Initializing object detection');
-    _objectDetection = await ObjectDetection.create();
-    printGreen('Object detection initialized');
-  }
+  Future<void> _captureAndDescribe() async {
+    setState(() {
+      _isLoading = true;
+      _isDescribing = true; // Start describing
+    });
 
-  // Start listening for voice input
-  void _startListening() {
-    printGreen('Starting to listen');
-    _voiceInteraction.startListening((speechText) async {
-      setState(() {
-        _speechText = speechText;
-        _isLoading = true;
-      });
+    try {
+      if (_cameraController != null && _cameraController!.value.isInitialized) {
+        final XFile picture = await _cameraController!.takePicture();
+        final bytes = await picture.readAsBytes();
+        final imageBase64 = base64Encode(bytes);
 
-      try {
-        String imageBase64 = "";
-        if (_cameraController != null && _cameraController!.value.isInitialized) {
-          final XFile picture = await _cameraController!.takePicture();
-          printGreen('Image captured: ${picture.path}');
-
-          final bytes = await picture.readAsBytes();
-          imageBase64 = base64Encode(bytes);
-        } else {
-          printRed('Camera not initialized or not available');
-        }
-
-        printGreen('Sending speech text and image to ChatGPT');
-        final response = await _chatGPTService.generateDescription(speechText, imageBase64);
+        final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
         setState(() {
           _generatedDescription = response;
         });
-        printGreen('ChatGPT response: $response');
-        await _voiceInteraction.speakText(response);
-      } catch (error) {
-        setState(() {
-          _generatedDescription = 'Error: $error';
-        });
-        printRed('Error communicating with ChatGPT: $error');
-        await _voiceInteraction.speakText('Failed to communicate with ChatGPT.');
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-        // Restart listening after processing the current speech and image
-        _startListening();
+        await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
+      } else {
+        print('Camera not initialized or not available');
+      }
+    } catch (error) {
+      setState(() {
+        _generatedDescription = 'Error: $error';
+      });
+      await _voiceInteraction.speakText('Failed to communicate with ChatGPT.');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _descriptionComplete() {
+    setState(() {
+      _isAskingQuestion = false;
+      _isDescribing = false; // Stop describing
+    });
+  }
+
+  void _stopInteraction() async {
+    await _voiceInteraction.stopSpeaking();
+    setState(() {
+      _isAskingQuestion = false;
+      _isLoading = false;
+      _isDescribing = false; // Stop describing if active
+    });
+  }
+
+  void _handlePress() {
+    if (_isDescribing || _isAskingQuestion) {
+      _stopInteraction();
+    } else {
+      _captureAndDescribe();
+    }
+  }
+
+  void _handleLongPressStart() {
+    _longPressTimer = Timer(Duration(seconds: 5), () {
+      if (!_isAskingQuestion) {
+        // Start listening for a question after 5 seconds
       }
     });
   }
 
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    if (_longPressTimer != null && _longPressTimer!.isActive) {
+      _longPressTimer!.cancel();
+    }
+  }
+
   @override
   void dispose() {
-    printRed('Disposing resources');
-    _cameraController?.dispose(); // Dispose camera controller
-    _objectDetection?.close(); // Close object detection
-    _voiceInteraction.dispose(); // Dispose voice interaction
+    _cameraController?.dispose();
+    _objectDetection?.close();
+    _voiceInteraction.dispose();
+    _longPressTimer?.cancel();
     super.dispose();
   }
 
@@ -145,6 +131,27 @@ class _HomeScreenState extends State<HomeScreen> {
             CameraPreview(_cameraController!),
           if (_isLoading)
             Center(child: CircularProgressIndicator()),
+          Center(
+            child: GestureDetector(
+              onTap: _handlePress,
+              onLongPressStart: (details) => _handleLongPressStart(),
+              onLongPressEnd: _handleLongPressEnd,
+              child: OutlinedButton(
+                onPressed: null,
+                child: Text(
+                  'Hold for Question, Tap to Describe',
+                  style: TextStyle(fontSize: 24),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 320, horizontal: 80),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.blue, width: 2),
+                ),
+              ),
+            ),
+          ),
           Positioned(
             bottom: 20,
             left: 20,

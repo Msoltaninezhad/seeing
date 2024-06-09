@@ -441,10 +441,10 @@ packages:
     dependency: "direct main"
     description:
       name: speech_to_text
-      sha256: "771686424c8b065b814823d63245c593f8a6f066537d658c837bfe51887ac4ce"
+      sha256: "97425fd8cc60424061a0584b6c418c0eedab5201cc5e96ef15a946d7fab7b9b7"
       url: "https://pub.dev"
     source: hosted
-    version: "6.6.1"
+    version: "6.6.2"
   speech_to_text_macos:
     dependency: transitive
     description:
