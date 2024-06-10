@@ -4,9 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart'; // For loading environment 
 
 class ChatGPTService {
   final String apiUrl = 'https://api.openai.com/v1/chat/completions';
-  // The API key should be fetched from the .env file for security reasons (commented out here for illustration)
+  // The API key should be fetched from the .env file for security reasons
   // final String apiKey = dotenv.env['OPENAI_API_KEY']!;
 
+  // Method to generate a description for an image
   Future<String> generateDescription(String prompt, String imageBase64) async {
     print('Prompt: $prompt');
     print('Image Base64: $imageBase64');
@@ -28,6 +29,91 @@ class ChatGPTService {
               }
             }
           ]
+        }
+      ],
+      'max_tokens': 300
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-proj-HK7qSrfdod8XRiAmQHa6T3BlbkFJ90N58Y1QCu0flYstFDCM', // Use your own API key here
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final String chatResponse = responseData['choices'][0]['message']['content'] ?? "No response from ChatGPT";
+        return chatResponse.trim();
+      } else {
+        print('Error response: ${response.body}');
+        throw Exception('Failed to communicate with ChatGPT: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+      throw Exception('Failed to communicate with ChatGPT: $error');
+    }
+  }
+
+  // Method to handle questions
+  Future<String> handleQuestion(String question) async {
+    print('Question: $question');
+
+    var requestBody = {
+      'model': 'gpt-4o',
+      'messages': [
+        {
+          'role': 'user',
+          'content': 'Question: $question Note: The user is blind.'
+        }
+      ],
+      'max_tokens': 300
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-proj-HK7qSrfdod8XRiAmQHa6T3BlbkFJ90N58Y1QCu0flYstFDCM', // Use your own API key here
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final String chatResponse = responseData['choices'][0]['message']['content'] ?? "No response from ChatGPT";
+        return chatResponse.trim();
+      } else {
+        print('Error response: ${response.body}');
+        throw Exception('Failed to communicate with ChatGPT: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+      throw Exception('Failed to communicate with ChatGPT: $error');
+    }
+  }
+
+  // Method to handle questions with image description
+  Future<String> handleQuestionWithImage(String description, String question) async {
+    print('Description: $description');
+    print('Question: $question');
+
+    var requestBody = {
+      'model': 'gpt-4o',
+      'messages': [
+        {
+          'role': 'user',
+          'content': 'Based on the following description: "$description", answer the following question: "$question". Note: The user is blind.'
         }
       ],
       'max_tokens': 300
