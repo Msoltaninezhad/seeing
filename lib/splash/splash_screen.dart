@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -24,12 +25,13 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/splash/splash.png',
-              width: 150,
-              height: 150,
-            ),
-            SizedBox(height: 20),
+            // Remove the Image.asset widget
+            // Image.asset(
+            //   'assets/splash/splash.png',
+            //   width: 150,
+            //   height: 150,
+            // ),
+            SizedBox(height: 20), // Adjust spacing as needed
             Text(
               'Welcome to Visually Impaired Assistant',
               style: TextStyle(
