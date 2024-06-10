@@ -168,17 +168,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Speech Text: $_speechText', style: TextStyle(color: Colors.white)),
-                Text('Description: $_generatedDescription', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-          ),
+          // Commented out the text display part
+          // Positioned(
+          //   bottom: 20,
+          //   left: 20,
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       Text('Speech Text: $_speechText', style: TextStyle(color: Colors.white)),
+          //       Text('Description: $_generatedDescription', style: TextStyle(color: Colors.white)),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );
