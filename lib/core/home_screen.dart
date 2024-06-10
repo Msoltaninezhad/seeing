@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Object Detection and ChatGPT Integration')),
+        appBar: AppBar(title: Text('Visuall Assistance')),
       body: Stack(
         children: [
           if (_cameraController != null && _cameraController!.value.isInitialized)
@@ -155,15 +155,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: OutlinedButton(
                 onPressed: null,
                 child: Text(
-                  'Hold for Question, Tap to Describe',
-                  style: TextStyle(fontSize: 24),
+                  ' Tap Describe/cancel\nHold Question',
+                  style: TextStyle(fontSize: 20),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 320, horizontal: 80),
+                  padding: EdgeInsets.symmetric(vertical: 320, horizontal:80),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  side: BorderSide(color: Colors.blue, width: 2),
+                  side: BorderSide(color: Colors.blue, width: 4),
                 ),
               ),
             ),
