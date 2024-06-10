@@ -45,19 +45,30 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Chat with AI')),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextField(
-            onSubmitted: _sendMessage,
-            decoration: InputDecoration(
-              labelText: 'Type your message',
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: TextField(
+              onSubmitted: _sendMessage,
+              decoration: InputDecoration(
+                labelText: 'Type your message',
+              ),
             ),
           ),
-          _isLoading
-              ? CircularProgressIndicator()
-              : Text(
-            _response,
-            style: TextStyle(fontSize: 18),
-          ),
+          if (_isLoading)
+            CircularProgressIndicator(),
+          // Container(
+          //   padding: EdgeInsets.all(8.0),
+          //   height: 100, // Set a fixed height for the response container
+          //   color: Colors.grey[200],
+          //   child: SingleChildScrollView(
+          //     child: Text(
+          //       _response,
+          //       style: TextStyle(fontSize: 18),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
