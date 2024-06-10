@@ -18,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   VoiceInteraction _voiceInteraction = VoiceInteraction();
   String _detectedObjects = '';
   String _generatedDescription = '';
+  String descriptionText = '';  // Variable to save description text
+  String questionText = '';     // Variable to save question text
   bool _isLoading = false;
   String _speechText = '';
   Timer? _longPressTimer;
@@ -57,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
         setState(() {
           _generatedDescription = response;
+          descriptionText = response;  // Save the description text
         });
         await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
       } else {
@@ -102,10 +105,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _longPressTimer = Timer(Duration(seconds: 2), () async {
       if (!_isAskingQuestion) {
         await _voiceInteraction.speakText("Ask question");
-        _voiceInteraction.startListening((command) {
+        _voiceInteraction.startListening((command) async {
           // Handle the command here
           print("User asked: $command");
-          // You can add additional functionality to process the command
+          setState(() {
+            questionText = command;  // Save the question text
+          });
+          // Send the image description and question text to ChatGPT
+          final response = await _chatGPTService.handleQuestionWithImage(descriptionText, command);
+          setState(() {
+            _speechText = response;
+          });
+          await _voiceInteraction.speakText(response);
         });
       }
     });

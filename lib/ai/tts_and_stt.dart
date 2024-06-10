@@ -35,12 +35,22 @@ class VoiceInteraction {
     await _flutterTts.setPitch(1.0);
   }
 
+  String sanitizeText(String text) {
+    return text.replaceAll('*', '')
+        .replaceAll('(', '')
+        .replaceAll(')', '')
+        .replaceAll('_', '')
+        .replaceAll('~', '')
+        .replaceAll('`', '');
+  }
+
   Future<void> speakText(String text, {Function? onComplete}) async {
-    printBlue("Speaking: $text");
-    await _flutterTts.speak(text);
+    String sanitizedText = sanitizeText(text);
+    printBlue("Speaking: $sanitizedText");
+    await _flutterTts.speak(sanitizedText);
     if (onComplete != null) {
       _flutterTts.setCompletionHandler(() {
-        printGreen("Finished speaking: $text");
+        printGreen("Finished speaking: $sanitizedText");
         onComplete();
       });
     }
@@ -95,7 +105,7 @@ class VoiceInteraction {
           }
         }
       },
-      listenFor: Duration(seconds: 60),
+      listenFor: Duration(seconds: 120),
       pauseFor: Duration(seconds: 10),
       partialResults: true,
       localeId: 'en_US',
