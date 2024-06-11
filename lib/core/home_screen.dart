@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _longPressTimer;
   bool _isAskingQuestion = false;
   bool _isDescribing = false; // New state variable to track if describing
+  String imageBase64 = ''; // Variable to store image data
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_cameraController != null && _cameraController!.value.isInitialized) {
         final XFile picture = await _cameraController!.takePicture();
         final bytes = await picture.readAsBytes();
-        final imageBase64 = base64Encode(bytes);
+        imageBase64 = base64Encode(bytes); // Store the image data
 
         final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
         setState(() {
@@ -112,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
             questionText = command;  // Save the question text
           });
           // Send the image description and question text to ChatGPT
-          final response = await _chatGPTService.handleQuestionWithImage(descriptionText, command);
+          final response = await _chatGPTService.handleQuestionWithImage(descriptionText, command, imageBase64);
           setState(() {
             _speechText = response;
           });
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('Visuall Assistance')),
+      appBar: AppBar(title: Text('Visual Assistance')),
       body: Stack(
         children: [
           if (_cameraController != null && _cameraController!.value.isInitialized)
