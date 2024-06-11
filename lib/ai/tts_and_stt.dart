@@ -51,8 +51,11 @@ class VoiceInteraction {
     if (onComplete != null) {
       _flutterTts.setCompletionHandler(() {
         printGreen("Finished speaking: $sanitizedText");
+        _isProcessing = false; // Reset _isProcessing flag
         onComplete();
       });
+    } else {
+      _isProcessing = false; // Reset _isProcessing flag if no completion handler
     }
   }
 
@@ -67,14 +70,13 @@ class VoiceInteraction {
           printYellow("Speech status: $status");
           if (status == 'done' || status == 'notListening') {
             _isListening = false;
-            if (!_isProcessing) {
-              _isListening = false;
-            }
+            _isProcessing = false; // Ensure _isProcessing is reset
           }
         },
         onError: (error) {
           printRed("Speech error: ${error.errorMsg}");
           _isListening = false;
+          _isProcessing = false; // Ensure _isProcessing is reset
         },
       );
 
@@ -87,6 +89,7 @@ class VoiceInteraction {
     }
 
     _isListening = true;
+    _isProcessing = false; // Ensure _isProcessing is reset
     printBlue("Listening started...");
     _listen(onDescribeCommand);
   }
