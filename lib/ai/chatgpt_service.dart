@@ -62,17 +62,27 @@ class ChatGPTService {
   }
 
   // Method to handle questions with image description
-  Future<String> handleQuestionWithImage(String description, String question, String imageBase64) async {
-    print('Description: $description');
+  Future<String> handleQuestionWithImage(String question, String imageBase64) async {
     print('Question: $question');
+    print('Image Base64: $imageBase64');
 
-    // First, check if the question can be answered based on the description
     var requestBody = {
       'model': 'gpt-4o',
       'messages': [
         {
           'role': 'user',
-          'content': 'Based on the following description: "$description", answer the following question: "$question". Note: The user is blind.'
+          'content': [
+            {
+              'type': 'text',
+              'text': '$question Note: The user is blind and this question pertains to the image.'
+            },
+            {
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:image/jpeg;base64,$imageBase64'
+              }
+            }
+          ]
         }
       ],
       'max_tokens': 300
@@ -94,13 +104,6 @@ class ChatGPTService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final String chatResponse = responseData['choices'][0]['message']['content'] ?? "No response from ChatGPT";
-
-        // If the chatResponse indicates that the question was not answered, reprocess the image
-        if (chatResponse.contains("I cannot answer that based on the provided description")) {
-          // Reprocess the image
-          return await generateDescription(question, imageBase64);
-        }
-
         return chatResponse.trim();
       } else {
         print('Error response: ${response.body}');
