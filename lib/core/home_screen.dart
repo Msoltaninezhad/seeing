@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _longPressTimer;
   bool _isAskingQuestion = false;
   bool _isDescribing = false; // New state variable to track if describing
-  bool _isQuestionFirst = false; // New state variable to track question first flow
   String imageBase64 = ''; // Variable to store image data
 
   @override
@@ -58,22 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
         final bytes = await picture.readAsBytes();
         imageBase64 = base64Encode(bytes); // Store the image data
 
-        if (_isQuestionFirst) {
-          // Send the image and question to get a specific answer
-          final response = await _chatGPTService.handleQuestionWithImage(questionText, imageBase64);
-          setState(() {
-            _speechText = response;
-          });
-          await _voiceInteraction.speakText(response);
-        } else {
-          // Describe the image
-          final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
-          setState(() {
-            _generatedDescription = response;
-            descriptionText = response;  // Save the description text
-          });
-          await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
-        }
+        final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
+        setState(() {
+          _generatedDescription = response;
+          descriptionText = response;  // Save the description text
+        });
+        await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
       } else {
         print('Camera not initialized or not available');
       }
@@ -85,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       setState(() {
         _isLoading = false;
-        _isQuestionFirst = false; // Reset question first flag
       });
     }
   }
@@ -123,10 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
           print("User asked: $command");
           setState(() {
             questionText = command;  // Save the question text
-            _isQuestionFirst = true; // Set question first flag
           });
-          // Prompt to upload/capture the image after asking question
-          await _voiceInteraction.speakText("Now upload or capture the image.");
+          // Send the image description and question text to ChatGPT
+          final response = await _chatGPTService.handleQuestionWithImage(descriptionText, command, imageBase64);
+          setState(() {
+            _speechText = response;
+          });
+          await _voiceInteraction.speakText(response);
         });
       }
     });
