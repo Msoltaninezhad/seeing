@@ -40,8 +40,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
+    // Choose a lower resolution preset for faster processing
     _cameraController = CameraController(cameras[0], ResolutionPreset.high);
     await _cameraController?.initialize();
+
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      // Print the image resolution
+      print('Camera Resolution: ${_cameraController!.value.previewSize}');
+    } else {
+      print('Failed to initialize the camera.');
+    }
+
     setState(() {});
   }
 
@@ -57,7 +66,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final bytes = await picture.readAsBytes();
         imageBase64 = base64Encode(bytes); // Store the image data
 
+        final startTime = DateTime.now(); // Start time for processing
         final response = await _chatGPTService.generateDescription('Describe this image.', imageBase64);
+        final endTime = DateTime.now(); // End time for processing
+
+        final processingTime = endTime.difference(startTime).inMilliseconds;
+        print('Description processing time: $processingTime ms'); // Print the processing time
+
         setState(() {
           _generatedDescription = response;
           descriptionText = response;  // Save the description text
@@ -69,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (error) {
       setState(() {
         _generatedDescription = 'Error: $error';
+        descriptionText = 'Error: $error';  // Save the error message
       });
       await _voiceInteraction.speakText('Failed to communicate with ChatGPT.');
     } finally {
@@ -116,10 +132,17 @@ class _HomeScreenState extends State<HomeScreen> {
           final response = await _chatGPTService.handleQuestionWithImage(descriptionText, command, imageBase64);
           setState(() {
             _speechText = response;
+            _isAskingQuestion = true; // Start asking question
           });
-          await _voiceInteraction.speakText(response);
+          await _voiceInteraction.speakText(response, onComplete: _answerComplete);
         });
       }
+    });
+  }
+
+  void _answerComplete() {
+    setState(() {
+      _isAskingQuestion = false; // Reset asking question flag
     });
   }
 
@@ -160,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontSize: 20),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 320, horizontal:80),
+                  padding: EdgeInsets.symmetric(vertical: 320, horizontal: 80),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
