@@ -72,7 +72,7 @@ class ChatGPTService {
       'messages': [
         {
           'role': 'user',
-          'content': 'Based on the following description: "$description", answer the following question: "$question". Note: The user is blind.'
+          'content': 'Answer the following question concisely: "$question". Avoid referencing the description or additional data. Note: The user is blind.'
         }
       ],
       'max_tokens': 300
@@ -95,8 +95,8 @@ class ChatGPTService {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final String chatResponse = responseData['choices'][0]['message']['content'] ?? "No response from ChatGPT";
 
-        // If the chatResponse indicates that the question was not answered, reprocess the image
-        if (chatResponse.contains("I cannot answer that based on the provided description")) {
+        // If the chatResponse does not contain an answer, reprocess the image
+        if (chatResponse.trim().isEmpty || chatResponse.contains("I cannot answer that based on the provided description")) {
           // Reprocess the image
           return await generateDescription(question, imageBase64);
         }
