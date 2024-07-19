@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // ),
             SizedBox(height: 20), // Adjust spacing as needed
             Text(
-              'Welcome to Visually Impaired Assistant',
+              'Welcome to HearTheVision',
               style: TextStyle(
                 fontSize: 24,
                 color: Colors.white,

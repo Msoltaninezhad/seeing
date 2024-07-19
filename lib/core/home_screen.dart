@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:visually_impaired_app/ai/object_detection.dart';
-import 'package:visually_impaired_app/ai/chatgpt_service.dart';
-import 'package:visually_impaired_app/ai/tts_and_stt.dart';
+import 'package:HearTheVision/ai/object_detection.dart';
+import 'package:HearTheVision/ai/chatgpt_service.dart';
+import 'package:HearTheVision/ai/tts_and_stt.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Visual Assistance')),
+      appBar: AppBar(title: Text('HearTheVision')),
       body: Stack(
         children: [
           if (_cameraController != null && _cameraController!.value.isInitialized)
