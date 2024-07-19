@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hear_the_vision/ai/text_recognition.dart';
-import 'package:hear_the_vision/splash/splash_screen.dart';
-import 'package:hear_the_vision/core/home_screen.dart';
-import 'package:hear_the_vision/ai/conversational_ai_chatgpt_integration.dart';
-import 'package:hear_the_vision/splash/welcome_message.dart';
+import 'package:HearTheVision/ai/text_recognition.dart';
+import 'package:HearTheVision/splash/splash_screen.dart';
+import 'package:HearTheVision/core/home_screen.dart';
+import 'package:HearTheVision/ai/conversational_ai_chatgpt_integration.dart';
+import 'package:HearTheVision/splash/wellcome_message.dart';
 
 class HearTheVision extends StatelessWidget {
   @override

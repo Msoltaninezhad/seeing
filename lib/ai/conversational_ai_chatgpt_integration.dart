@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:visually_impaired_app/ai/chatgpt_service.dart';
+import 'package:HearTheVision/ai/chatgpt_service.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
