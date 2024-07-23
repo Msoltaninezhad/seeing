@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:HearTheVision/ai/text_recognition.dart';
-import 'package:HearTheVision/splash/splash_screen.dart';
-import 'package:HearTheVision/core/home_screen.dart';
-import 'package:HearTheVision/ai/conversational_ai_chatgpt_integration.dart';
-import 'package:HearTheVision/splash/wellcome_message.dart';
+import 'package:HearTheVisionG/ai/text_recognition.dart';
+import 'package:HearTheVisionG/splash/splash_screen.dart';
+import 'package:HearTheVisionG/core/home_screen.dart';
+import 'package:HearTheVisionG/ai/conversational_ai_gemini_integration.dart';
+import 'package:HearTheVisionG/splash/wellcome_message.dart';
 
-class HearTheVision extends StatelessWidget {
+class HearTheVisionG extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WelcomeMessage();
@@ -28,5 +28,5 @@ class HearTheVision extends StatelessWidget {
 }
 
 void main() {
-  runApp(HearTheVision());
+  runApp(HearTheVisionG());
 }

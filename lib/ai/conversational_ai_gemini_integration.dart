@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:HearTheVision/ai/chatgpt_service.dart';
+import 'package:HearTheVisionG/ai/gemini_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -9,7 +11,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final FlutterTts _flutterTts = FlutterTts();
-  final ChatGPTService _chatGPTService = ChatGPTService();
+  final GeminiService _geminiService = GeminiService();
   String _response = '';
   bool _isLoading = false;
 
@@ -19,7 +21,11 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final response = await _chatGPTService.generateDescription(message, ""); // Assuming no imageBase64 is needed
+      // Create a dummy file path for testing
+      final directory = await getApplicationDocumentsDirectory();
+      final imagePath = '${directory.path}/dummy_image.png';
+
+      final response = await _geminiService.handleQuestionWithImage("Description", message, imagePath);
       setState(() {
         _response = response;
       });
@@ -28,7 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _response = 'Error: $error';
       });
-      _speak('Failed to communicate with ChatGPT.');
+      _speak('Failed to communicate with Gemini API.');
     } finally {
       setState(() {
         _isLoading = false;
@@ -58,17 +64,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           if (_isLoading)
             CircularProgressIndicator(),
-          // Container(
-          //   padding: EdgeInsets.all(8.0),
-          //   height: 100, // Set a fixed height for the response container
-          //   color: Colors.grey[200],
-          //   child: SingleChildScrollView(
-          //     child: Text(
-          //       _response,
-          //       style: TextStyle(fontSize: 18),
-          //     ),
-          //   ),
-          // ),
+          if (_response.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                _response,
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
         ],
       ),
     );
