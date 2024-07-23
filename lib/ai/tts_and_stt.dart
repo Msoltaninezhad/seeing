@@ -22,7 +22,7 @@ class VoiceInteraction {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _isListening = false;
   bool _isProcessing = false;
-  bool _isInitialized = false; // New flag to check initialization
+  bool _isInitialized = false;
 
   VoiceInteraction() {
     _initializeTts();
@@ -51,11 +51,11 @@ class VoiceInteraction {
     if (onComplete != null) {
       _flutterTts.setCompletionHandler(() {
         printGreen("Finished speaking: $sanitizedText");
-        _isProcessing = false; // Reset _isProcessing flag
+        _isProcessing = false;
         onComplete();
       });
     } else {
-      _isProcessing = false; // Reset _isProcessing flag if no completion handler
+      _isProcessing = false;
     }
   }
 
@@ -70,13 +70,13 @@ class VoiceInteraction {
           printYellow("Speech status: $status");
           if (status == 'done' || status == 'notListening') {
             _isListening = false;
-            _isProcessing = false; // Ensure _isProcessing is reset
+            _isProcessing = false;
           }
         },
         onError: (error) {
           printRed("Speech error: ${error.errorMsg}");
           _isListening = false;
-          _isProcessing = false; // Ensure _isProcessing is reset
+          _isProcessing = false;
         },
       );
 
@@ -85,11 +85,11 @@ class VoiceInteraction {
         return;
       }
 
-      _isInitialized = true; // Set initialization flag
+      _isInitialized = true;
     }
 
     _isListening = true;
-    _isProcessing = false; // Ensure _isProcessing is reset
+    _isProcessing = false;
     printBlue("Listening started...");
     _listen(onDescribeCommand);
   }

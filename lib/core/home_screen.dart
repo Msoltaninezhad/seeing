@@ -18,7 +18,10 @@ class _HomeScreenState extends State<HomeScreen> {
   VoiceInteraction _voiceInteraction = VoiceInteraction();
   bool _isLoading = false;
   bool _isDescribing = false;
+  bool _isAskingQuestion = false;
+  Timer? _longPressTimer;
   String? imagePath;
+  String descriptionText = '';
 
   @override
   void initState() {
@@ -59,6 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
         final response = await _geminiService.generateDescription(imagePath!);
         print('Description response: $response');
 
+        setState(() {
+          descriptionText = response;
+        });
+
         await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
       } else {
         print('Camera not initialized or not available');
@@ -79,10 +86,53 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _handleTap() {
+    if (_isDescribing || _isAskingQuestion) {
+      _stopInteraction();
+    } else {
+      _captureAndDescribe();
+    }
+  }
+
+  void _handleLongPressStart() {
+    _longPressTimer = Timer(Duration(seconds: 2), () async {
+      if (!_isAskingQuestion) {
+        await _voiceInteraction.speakText("Ask question");
+        _voiceInteraction.startListening((command) async {
+          print("User asked: $command");
+          setState(() {
+            _isAskingQuestion = true;
+          });
+          final response = await _geminiService.handleQuestionWithImage(descriptionText, command, imagePath!);
+          setState(() {
+            _isAskingQuestion = false;
+          });
+          await _voiceInteraction.speakText(response, onComplete: _descriptionComplete);
+        });
+      }
+    });
+  }
+
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    if (_longPressTimer != null && _longPressTimer!.isActive) {
+      _longPressTimer!.cancel();
+    }
+  }
+
+  void _stopInteraction() async {
+    await _voiceInteraction.stopSpeaking();
+    setState(() {
+      _isDescribing = false;
+      _isLoading = false;
+      _isAskingQuestion = false;
+    });
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
     _voiceInteraction.dispose();
+    _longPressTimer?.cancel();
     super.dispose();
   }
 
@@ -98,11 +148,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Center(child: CircularProgressIndicator()),
           Center(
             child: GestureDetector(
-              onTap: _captureAndDescribe,
+              onTap: _handleTap,
+              onLongPressStart: (details) => _handleLongPressStart(),
+              onLongPressEnd: _handleLongPressEnd,
               child: OutlinedButton(
                 onPressed: null,
                 child: Text(
-                  ' Tap to Describe',
+                  ' Tap to Describe\nHold to Ask Question',
                   style: TextStyle(fontSize: 20),
                 ),
                 style: OutlinedButton.styleFrom(

@@ -9,23 +9,23 @@ class GeminiService {
 
   GeminiService() : model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: 'AIzaSyDYWON8z6cx5Tz0r0gTVlyAsbP_T1bqsMw');
 
-  Future<void> sendInitialText() async {
-    final prompt = "Hi Gemini.";
-    print('Sending initial text: $prompt');
+  // Future<void> sendInitialText() async {
+  //   final prompt = "Hi Gemini.";
+  //   print('Sending initial text: $prompt');
 
-    try {
-      final response = await model.generateContent([Content.text(prompt)]);
-      print('Initial text response: ${response.candidates?.first.text ?? "No response generated"}');
-    } catch (error) {
-      print('Error occurred while sending initial text: $error');
-      throw Exception('Failed to communicate with Gemini API: $error');
-    }
-  }
+  //   try {
+  //     final response = await model.generateContent([Content.text(prompt)]);
+  //     print('Initial text response: ${response.candidates?.first.text ?? "No response generated"}');
+  //   } catch (error) {
+  //     print('Error occurred while sending initial text: $error');
+  //     throw Exception('Failed to communicate with Gemini API: $error');
+  //   }
+  // }
 
   Future<String> generateDescription(String imagePath) async {
-    await sendInitialText(); // Send initial text first
+    // await sendInitialText(); // Send initial text first
 
-    final prompt = "Describe the image and note the user is blind.";
+    final prompt = "Describe the image directly to the user.";
     print('Prompt: $prompt');
 
     try {
@@ -51,7 +51,7 @@ class GeminiService {
     print('Description: $description');
     print('Question: $question');
 
-    var prompt = "$question Note: the user is blind.";
+    var prompt = 'Answer the following question concisely: "$question". Do not reference the user\'s blindness.';
     print('Prompt: $prompt');
 
     try {
@@ -81,7 +81,7 @@ class GeminiService {
   }
 
   Future<String> sendGeneralQuestion(String question) async {
-    final prompt = "Answer the following question concisely: \"$question\". Avoid referencing the description or additional data. Note: The user is blind.";
+    final prompt = 'Answer the following question concisely: "$question". Do not reference the user\'s blindness.';
     print('Prompt: $prompt');
 
     try {
