@@ -26,11 +26,11 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Remove the Image.asset widget
-            // Image.asset(
-            //   'assets/splash/splash.png',
-            //   width: 150,
-            //   height: 150,
-            // ),
+             Image.asset(
+              'assets/splash/splash.png',
+              width: 150,
+              height: 150,
+             ),
             SizedBox(height: 20), // Adjust spacing as needed
             Text(
               'Welcome to HearTheVision',

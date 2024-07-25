@@ -28,7 +28,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    #   - assets/splash/splash.png
+    - assets/splash/splash.png
     - assets/mobilenet_ssd.tflite
     - assets/labels.txt
   # fonts:
