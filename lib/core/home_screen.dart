@@ -147,7 +147,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _longPressTimer?.cancel();  // Cancel timer
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     // Get the size of the screen and the safe area insets
@@ -203,16 +202,26 @@ class _HomeScreenState extends State<HomeScreen> {
               onLongPressEnd: _handleLongPressEnd,
               child: OutlinedButton(
                 onPressed: null,
-                child: Text(
-                  ' Tap to Describe\nHold to Ask Question',
-                  style: TextStyle(fontSize: screenWidth * 0.05),  // Set font size based on screen width
-                ),
                 style: OutlinedButton.styleFrom(
                   padding: EdgeInsets.zero,  // No padding to cover the entire screen
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero,  // No border radius to cover the entire screen
                   ),
                   side: BorderSide(color: Colors.blueGrey, width: 8),
+                ),
+                child: ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [Colors.blueGrey, Colors.deepPurple],
+                    tileMode: TileMode.mirror,
+                  ).createShader(bounds),
+                  child: Text(
+                    ' Tap to Describe\nHold to Ask Question',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.05,  // Set font size based on screen width
+                      color: Colors.white,  // The actual color doesn't matter when using ShaderMask
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
