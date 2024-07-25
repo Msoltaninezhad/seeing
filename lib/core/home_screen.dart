@@ -150,9 +150,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the size of the screen
+    // Get the size of the screen and the safe area insets
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final appBarHeight = kToolbarHeight;  // Default height of the AppBar
+    final totalTopBarHeight = topPadding + appBarHeight;  // Calculate the total height of the top bar
+
+    // Set the font size and logo size based on the totalTopBarHeight
+    final textSize = topPadding * 0.7;  // Example proportion
+    final logoSize = topPadding * 1;  // Example proportion
 
     return Scaffold(
       appBar: AppBar(
@@ -162,13 +169,13 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Image.asset(
                 'assets/splash/splash.png',  // Ensure this path is correct
-                height: 48,  // Adjust the height as needed
+                height: logoSize,  // Set the logo size
               ),
               SizedBox(width: 8),  // Add some space between the logo and the text
               Text(
                 'HearTheVision',
                 style: TextStyle(
-                  fontSize: 24,  // Large font size
+                  fontSize: textSize,  // Set the font size based on the calculated height
                   fontWeight: FontWeight.bold,  // Bold text
                   color: Colors.white,  // High-contrast text color
                 ),
@@ -205,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero,  // No border radius to cover the entire screen
                   ),
-                  side: BorderSide(color: Colors.blueGrey, width: 4),
+                  side: BorderSide(color: Colors.blueGrey, width: 8),
                 ),
               ),
             ),
