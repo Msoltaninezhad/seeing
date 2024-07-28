@@ -18,6 +18,7 @@ dependencies:
   flutter_tts: ^3.2.2
   speech_to_text: ^6.6.1
   tflite_flutter: ^0.10.1
+  logger: ^1.0.0
   camera: ^0.9.4+5
   permission_handler: ^10.2.0
   google_generative_ai: ^0.4.3
