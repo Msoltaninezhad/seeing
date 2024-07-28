@@ -1,4 +1,4 @@
-import 'package:HearTheVisionG/ai/tts_and_stt.dart';
+import 'package:HearTheVisionG/tts_stt/tts_and_stt.dart';
 import 'package:logger/logger.dart';
 
 /// Service for handling voice interactions, including text-to-speech and speech-to-text.
