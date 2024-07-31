@@ -16,14 +16,14 @@ class ImageProcessingService {
 
       // Get the application documents directory to save the image
       final directory = await getApplicationDocumentsDirectory();
-      final imagePath = '${directory.path}/captured_image.png';
+      final imagePath = '${directory.path}/captured_image.jpg'; // Save as .jpg
 
       // Save the captured image to the defined path
       await picture.saveTo(imagePath);
 
       // Log the success of the image capture and save
       logger.i('Image captured and saved to $imagePath');
-      logger.i('Image MIME type: image/png');
+      logger.i('Image MIME type: image/jpeg'); // Updated to match .jpg
 
       return imagePath;
     } catch (error) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:HearTheVisionG/ai/text_recognition.dart';
 import 'package:HearTheVisionG/splash/splash_screen.dart';
 import 'package:HearTheVisionG/core/home_screen.dart';
 import 'package:HearTheVisionG/ai/conversational_ai_gemini_integration.dart';
@@ -13,7 +12,7 @@ class HearTheVisionG extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Plays a welcome message upon application start.
-    WelcomeMessage();
+    welcomeMessage();
 
     return MaterialApp(
       title: 'Hear The Vision Assistant', // Application title
@@ -21,8 +20,7 @@ class HearTheVisionG extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(), // Route for splash screen
         '/home': (context) => const HomeScreen(), // Route for home screen
-        '/text_recognition': (context) => TextRecognitionScreen(), // Route for text recognition screen
-        '/chat': (context) => ChatScreen(), // Route for chat screen
+        '/chat': (context) => const ChatScreen(), // Route for chat screen
       },
       theme: ThemeData(
         primarySwatch: Colors.blue, // Primary color theme

@@ -1,7 +1,7 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
 // Function to speak the welcome message
-Future<void> WelcomeMessage() async {
+Future<void> welcomeMessage() async {
   FlutterTts flutterTts = FlutterTts();
 
   await flutterTts.setLanguage('en-US');

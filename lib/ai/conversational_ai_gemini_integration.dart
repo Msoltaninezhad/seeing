@@ -29,7 +29,7 @@ class ChatScreenState extends State<ChatScreen> {
     try {
       // Create a dummy file path for testing
       final directory = await getApplicationDocumentsDirectory();
-      final imagePath = '${directory.path}/dummy_image.png';
+      final imagePath = '${directory.path}/dummy_image.jpg';
 
       // Log the image path for debugging
       logger.i('Image path: $imagePath');

@@ -4,10 +4,10 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  SplashScreenState createState() => SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -15,8 +15,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToHome() async {
-    await Future.delayed(Duration(seconds: 3), () {});
-    Navigator.pushReplacementNamed(context, '/home');
+    await Future.delayed(const Duration(seconds: 3), () {});
+    if (mounted) { // Check if the widget is still mounted
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
   @override
@@ -27,14 +29,13 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Remove the Image.asset widget
-             Image.asset(
+            Image.asset(
               'assets/splash/splash.png',
               width: 150,
               height: 150,
-             ),
-            SizedBox(height: 20), // Adjust spacing as needed
-            Text(
+            ),
+            const SizedBox(height: 20),
+            const Text(
               'Welcome to HearTheVision',
               style: TextStyle(
                 fontSize: 24,
