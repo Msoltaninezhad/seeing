@@ -1,48 +1,89 @@
-import 'package:HearTheVisionG/tts_stt/tts_and_stt.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:logger/logger.dart';
 
-/// Service for handling voice interactions, including text-to-speech and speech-to-text.
 class VoiceInteractionService {
-  final VoiceInteraction _voiceInteraction = VoiceInteraction();  // Instance of the VoiceInteraction class
-  final Logger logger = Logger();  // Logger instance for logging messages
+  final VoiceInteraction _voiceInteraction = VoiceInteraction();
+  final Logger logger = Logger();
+  bool _isListening = false;
 
-  /// Speaks the given text using the text-to-speech service.
-  ///
-  /// An optional [onComplete] callback can be provided to execute after speaking is complete.
-  Future<void> speakText(String text, {Function? onComplete}) async {
+  Future<void> speakText(String text, {void Function()? onComplete}) async {
     try {
-      await _voiceInteraction.speakText(text, onComplete: onComplete);
+      await _voiceInteraction.speakText(text, onComplete: () {
+        logger.i('Finished speaking: $text');
+        if (onComplete != null) {
+          onComplete();
+        }
+      });
       logger.i('Text spoken: $text');
     } catch (error) {
       logger.e('Error speaking text: $error');
     }
   }
 
-  /// Starts listening for voice commands using the speech-to-text service.
-  ///
-  /// The [onCommand] callback is executed with the recognized command as a parameter.
-  void startListening(Function(String) onCommand) {
+  Future<void> stopSpeaking() async {
     try {
-      _voiceInteraction.startListening(onCommand);
+      await _voiceInteraction.stopSpeaking();
+      if (_isListening) {
+        await _voiceInteraction.stopListening();
+        _isListening = false;
+      }
+      logger.i('Stopped speaking and reset states.');
+    } catch (error) {
+      logger.e('Error stopping speech: $error');
+      _isListening = false;
+    }
+  }
+
+  void startListening(Function(String) onCommand) async {
+    try {
+      _isListening = true;
+      await _voiceInteraction.startListening(onCommand);
       logger.i('Started listening for voice commands.');
     } catch (error) {
+      _isListening = false;
       logger.e('Error starting to listen: $error');
     }
   }
 
-  /// Stops any ongoing text-to-speech activity.
-  Future<void> stopSpeaking() async {
-    try {
-      await _voiceInteraction.stopSpeaking();
-      logger.i('Stopped speaking.');
-    } catch (error) {
-      logger.e('Error stopping speech: $error');
-    }
-  }
-
-  /// Disposes the voice interaction instance to free up resources.
   void dispose() {
     _voiceInteraction.dispose();
     logger.i('Disposed voice interaction.');
+  }
+}
+
+class VoiceInteraction {
+  final FlutterTts _flutterTts = FlutterTts();
+  final stt.SpeechToText _speechToText = stt.SpeechToText();
+
+  Future<void> speakText(String text, {void Function()? onComplete}) async {
+    await _flutterTts.speak(text);
+    if (onComplete != null) {
+      _flutterTts.setCompletionHandler(onComplete);
+    }
+  }
+
+  Future<void> stopSpeaking() async {
+    await _flutterTts.stop();
+  }
+
+  Future<void> startListening(Function(String) onCommand) async {
+    bool available = await _speechToText.initialize();
+    if (available) {
+      _speechToText.listen(onResult: (result) {
+        if (result.finalResult) {
+          onCommand(result.recognizedWords);
+        }
+      });
+    }
+  }
+
+  Future<void> stopListening() async {
+    await _speechToText.stop();
+  }
+
+  void dispose() {
+    _flutterTts.stop();
+    _speechToText.stop();
   }
 }

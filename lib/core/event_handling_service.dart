@@ -46,20 +46,24 @@ class EventHandlingService {
 
     if (buttonSignal) {
       // Handle the action triggered by the physical button
-      if (isDescribing || isAskingQuestion) {
-        stopInteraction();
-      } else {
-        await _voiceService.speakText("Image description");
-        captureAndDescribe();
-      }
+      await _handleTapOrButtonPress(isDescribing, isAskingQuestion, captureAndDescribe, stopInteraction);
     } else {
       // Fallback to handling screen tap
-      if (isDescribing || isAskingQuestion) {
-        stopInteraction();
-      } else {
-        await _voiceService.speakText("Image description");
-        captureAndDescribe();
-      }
+      await _handleTapOrButtonPress(isDescribing, isAskingQuestion, captureAndDescribe, stopInteraction);
+    }
+  }
+
+  Future<void> _handleTapOrButtonPress(
+      bool isDescribing,
+      bool isAskingQuestion,
+      Future<void> Function() captureAndDescribe,
+      Future<void> Function() stopInteraction) async {
+    if (isDescribing || isAskingQuestion) {
+      await stopInteraction();
+    } else {
+      await _voiceService.stopSpeaking(); // Ensure any ongoing speech is stopped before starting a new one
+      await _voiceService.speakText("Image description");
+      await captureAndDescribe();
     }
   }
 
