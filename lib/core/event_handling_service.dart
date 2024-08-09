@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:HearTheVisionG/ai/gemini_service.dart';
 import 'package:HearTheVisionG/core/voice_interaction_service.dart';
 import 'package:flutter/gestures.dart';
+import 'package:http/http.dart' as http;
 
 /// Service to handle user interactions such as taps and long presses.
 class EventHandlingService {
@@ -11,19 +12,52 @@ class EventHandlingService {
   final Logger _logger = Logger();
   Timer? _longPressTimer;
 
+  static const String esp32ButtonUrl = 'http://esp32_button_ip'; // Replace with your ESP32 button IP address
+
   EventHandlingService(this._voiceService, this._geminiService);
 
+  /// Fetches a signal from the physical button over Wi-Fi.
+  Future<bool> _fetchSignalFromButton() async {
+    try {
+      final response = await http.get(Uri.parse('$esp32ButtonUrl/signal'));
+      if (response.statusCode == 200 && response.body == '1') { // Assuming '1' indicates the button was pressed
+        _logger.i('Signal received from physical button.');
+        return true;
+      } else {
+        _logger.e('Failed to receive signal from physical button. Status code: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      _logger.e('Error receiving signal from physical button: $e');
+      return false;
+    }
+  }
+
   /// Handles tap events by either stopping the current interaction or starting a new capture and describe process.
-  void handleTap({
+  Future<void> handleTap({
     required bool isDescribing,
     required bool isAskingQuestion,
     required Future<void> Function() captureAndDescribe,
     required Future<void> Function() stopInteraction,
-  }) {
-    if (isDescribing || isAskingQuestion) {
-      stopInteraction();
+  }) async {
+    final bool buttonSignal = await _fetchSignalFromButton();
+
+    if (buttonSignal) {
+      // Handle the action triggered by the physical button
+      if (isDescribing || isAskingQuestion) {
+        stopInteraction();
+      } else {
+        await _voiceService.speakText("Image description");
+        captureAndDescribe();
+      }
     } else {
-      captureAndDescribe();
+      // Fallback to handling screen tap
+      if (isDescribing || isAskingQuestion) {
+        stopInteraction();
+      } else {
+        await _voiceService.speakText("Image description");
+        captureAndDescribe();
+      }
     }
   }
 

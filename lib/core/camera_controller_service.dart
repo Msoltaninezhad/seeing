@@ -7,7 +7,7 @@ class CameraControllerService {
   CameraController? _cameraController;  // Camera controller instance
   final Logger logger = Logger();  // Logger instance for logging messages
 
-  static const String esp32CamUrl = 'http://your_esp32_cam_ip';  // Replace with your ESP32 cam IP address
+  static const String esp32CamUrl = 'http://esp32_cam_ip';  // Replace with your ESP32 cam IP address
 
   /// Initializes the camera by selecting the first available camera and setting
   /// the resolution to high. Logs the status of the initialization.
