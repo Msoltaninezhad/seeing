@@ -4,11 +4,13 @@ import 'package:HearTheVisionG/ai/gemini_service.dart';
 import 'package:HearTheVisionG/core/voice_interaction_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
+import 'package:HearTheVisionG/ai/feedback.dart';  // Import the FeedbackService
 
 /// Service to handle user interactions such as taps and long presses.
 class EventHandlingService {
   final VoiceInteractionService _voiceService;
   final GeminiService _geminiService;
+  final FeedbackService _feedbackService = FeedbackService();  // Initialize FeedbackService
   final Logger _logger = Logger();
   Timer? _longPressTimer;
 
@@ -74,11 +76,16 @@ class EventHandlingService {
       if (!isAskingQuestion) {
         await _voiceService.speakText("Ask question");
         _voiceService.startListening((command) async {
-          _logger.i("User asked: $command");
-          await setIsAskingQuestionTrue();
-          final response = await _geminiService.handleQuestionWithImage(descriptionText, command, imagePath!);
-          await _voiceService.speakText(response, onComplete: descriptionComplete);
-          await setIsAskingQuestionFalse(); // Reset the state after interaction
+          _logger.i("User said: $command");
+
+          if (command.toLowerCase().contains("feedback")) {
+            await _feedbackService.sendFeedback(command);
+          } else {
+            await setIsAskingQuestionTrue();
+            final response = await _geminiService.handleQuestionWithImage(descriptionText, command, imagePath!);
+            await _voiceService.speakText(response, onComplete: descriptionComplete);
+            await setIsAskingQuestionFalse(); // Reset the state after interaction
+          }
         });
       }
     });
