@@ -1,4 +1,4 @@
-# visually_impaired_app
+# HearTheVision
 
 A new Flutter project.
 
