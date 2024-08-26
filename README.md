@@ -1,16 +1,9 @@
-# visually_impaired_app
+# HearTheVision
 
-A new Flutter project.
+HearTheVision is a user-friendly mobile application written in Dart that helps blind and visually impaired people improve their quality of life. The app's interface is designed with simplicity in mind, featuring large buttons on every screen. 
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- With **one tap**, users can receive a description of what is in front of them.
+- With another **one tap**, they can cancel the description.
+- By holding the button for **2 seconds**, they can **ask a question** about the image.
+- Using the keyword **general**, users can ask general questions.
+- With the keyword **feedback**, they can send their feedback for prompt engineering Gemini.
