@@ -26,7 +26,7 @@ class GeminiService {
       logger.i('Sending request to Gemini API...');
       final response = await model.generateContent([
         Content.text(prompt),
-        Content.data("image/png", imageBytes),
+        Content.data("image/jpeg", imageBytes),
       ]);
       logger.i('Response received from Gemini API.');
       logger.i('Response: ${response.candidates.first.text ?? "No description generated"}');
