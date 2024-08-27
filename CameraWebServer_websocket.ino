@@ -19,9 +19,6 @@ bool buttonState = HIGH;
 unsigned long pressStartTime = 0;
 bool isLongPress = false;
 
-void startCameraServer();  // Comment out this function call in setup
-void handleButtonPress();
-
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
         case WStype_DISCONNECTED:
@@ -37,21 +34,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
             break;
         case WStype_TEXT:
             Serial.printf("[%u] get Text: %s\n", num, payload);
-            if (String((char *)payload) == "capture_image") {
-                // Capture image from the camera
-                camera_fb_t * fb = esp_camera_fb_get();
-                if(!fb) {
-                    Serial.println("Camera capture failed");
-                    webSocket.sendTXT(num, "Camera capture failed");
-                    return;
-                }
-                // Send the captured image as binary data
-                webSocket.sendBIN(num, fb->buf, fb->len);
-                esp_camera_fb_return(fb);
-                Serial.println("Image sent to client");
-            } else {
-                webSocket.broadcastTXT("Received: " + String((char *)payload));
-            }
             break;
         case WStype_BIN:
             Serial.printf("[%u] get binary length: %u\n", num, length);
@@ -157,6 +139,17 @@ void handleButtonPress() {
         } else {
             Serial.println("Short press detected");
             webSocket.broadcastTXT("short_press");
+
+            // Capture and send image on short press
+            camera_fb_t * fb = esp_camera_fb_get();
+            if(!fb) {
+                Serial.println("Camera capture failed");
+                webSocket.broadcastTXT("Camera capture failed");
+                return;
+            }
+            webSocket.broadcastBIN(fb->buf, fb->len);
+            esp_camera_fb_return(fb);
+            Serial.println("Image sent to client");
         }
     }
 
