@@ -1,6 +1,7 @@
 # HearTheVision
 
-A new Flutter project.
+See the performance in the youtube video: https://youtu.be/aAEvv8LUKzI?si=gRifKpE0Aa9tqs3I
+Google competetion qualified application.
 
 ## Getting Started
 
